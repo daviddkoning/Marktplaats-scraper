@@ -10,6 +10,16 @@ const laden = ref(false)
 const zoekDuur = ref(null) 
 const isDarkMode = ref(false)
 
+// Dynamic loading status messages
+const laadTeksten = [
+  'Marktplaats doorzoeken...',
+  'Actuele advertenties ophalen...',
+  'Prijzen & statistieken analyseren...',
+  'Resultaten verwerken...'
+]
+const laadTekstIndex = ref(0)
+let laadTimer = null
+
 // Title head is the page title, the text on the tab itself!
 useHead({
   title: 'Dealsfinder.nl – Waar ben je naar op zoek?'
@@ -63,7 +73,7 @@ const formatKm = (waarde) => {
   return Number(waarde).toLocaleString('nl-NL');
 }
 
-const formatDuur = (ms) => {        // <-- NEW, directly below formatKm, calculates time between search and results 
+const formatDuur = (ms) => {
   if (ms === null) return ''
   return ms < 1000 ? `${Math.round(ms)} ms` : `${(ms / 1000).toFixed(2).replace('.', ',')} s`
 }
@@ -88,8 +98,14 @@ async function zoekProduct() {
     return
   }
 
+  // Start dynamic loading state & timer
   laden.value = true
-  const start = performance.now()   // <-- NEW
+  laadTekstIndex.value = 0
+  laadTimer = setInterval(() => {
+    laadTekstIndex.value = (laadTekstIndex.value + 1) % laadTeksten.length
+  }, 750)
+
+  const start = performance.now()
   try {
     let url = `/api/stats?term=${encodeURIComponent(zoekterm.value)}`
     if (categorie.value) {
@@ -108,7 +124,6 @@ async function zoekProduct() {
       foutmelding.value = response.error
     } else {
       statistieken.value = response
-      // NEW: wait until the prices are actually painted
       await nextTick()
       await new Promise(requestAnimationFrame)
       zoekDuur.value = performance.now() - start
@@ -116,6 +131,7 @@ async function zoekProduct() {
   } catch (error) {
     foutmelding.value = "Kan de backend server niet bereiken. Draait FastAPI?"
   } finally {
+    if (laadTimer) clearInterval(laadTimer)
     laden.value = false
   }
 }
@@ -137,7 +153,7 @@ async function zoekProduct() {
     <section class="intro">
       <div class="header-text">
         <span class="sub-heading">Wat is</span>
-        <h1 class="gradient-text">Dealsfinder.nl?</h1>
+        <h1 class="gradient-text"><span class="orange-text">Deals</span>finder.nl?</h1>
       </div>
     </section>
 
@@ -239,15 +255,17 @@ async function zoekProduct() {
       </div>
     </Transition>
 
+    <!-- Modern Dynamic Spinner & Rotating Messages -->
     <Transition name="fade">
       <div v-if="laden" class="loading-state">
-        <button type="button" class="inline-flex items-center text-body bg-neutral-primary-soft border border-default hover:bg-neutral-secondary-medium hover:text-heading focus:ring-4 focus:ring-neutral-tertiary-soft shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none" disabled>
-          <svg aria-hidden="true" class="w-4 h-4 text-neutral-tertiary animate-spin fill-brand me-2" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
-            <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
+        <div class="dynamic-spinner">
+          <svg class="spinner-svg" viewBox="0 0 50 50">
+            <circle class="path-bg" cx="25" cy="25" r="20" fill="none" stroke-width="4"></circle>
+            <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="4"></circle>
           </svg>
-          Actuele advertenties ophalen...
-        </button>
+          <div class="spinner-pulse"></div>
+        </div>
+        <span class="loading-text">{{ laadTeksten[laadTekstIndex] }}</span>
       </div>
     </Transition>  
    
@@ -693,27 +711,98 @@ body.dark-theme .gradient-text {
   transform: scale(1.1);
 }
 
+/* ===== Orange Header Accent ===== */
+.orange-text {
+  color: #ff6b00;
+  -webkit-text-fill-color: #ff6b00;
+  background: none;
+}
+
+/* ===== Dynamic Spinner Styling ===== */
 .loading-state {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 20px;
-  color: var(--color-forest-ink);
-  font-weight: 700;
+  justify-content: center;
+  gap: 16px;
+  padding: 32px 20px;
 }
 
-.spinner {
-  width: 24px;
-  height: 24px;
-  border: 4px solid var(--color-fog);
-  border-top-color: var(--color-lime-voltage);
+.dynamic-spinner {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner-svg {
+  animation: rotate 1.6s linear infinite;
+  width: 100%;
+  height: 100%;
+}
+
+.spinner-svg .path-bg {
+  stroke: rgba(226, 232, 240, 0.6);
+}
+
+.spinner-svg .path {
+  stroke: #ff6b00;
+  stroke-linecap: round;
+  animation: dash 1.4s ease-in-out infinite;
+}
+
+.spinner-pulse {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background-color: #ff6b00;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: pulse 1.2s ease-in-out infinite alternate;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.loading-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-charcoal);
+  transition: opacity 0.3s ease;
+}
+
+body.dark-theme .loading-text {
+  color: var(--color-paper);
+}
+
+@keyframes rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dash {
+  0% {
+    stroke-dasharray: 1, 150;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -35;
+  }
+  100% {
+    stroke-dasharray: 90, 150;
+    stroke-dashoffset: -124;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
 }
 
 .alert-error {
@@ -859,7 +948,6 @@ body.dark-theme .gradient-text {
   object-fit: contain;
 }
 
-/* Wise uses stark solid colors rather than vibrant multi-color gradients */
 .gradient-text {
   margin: 0;
   font-size: clamp(36px, 8vw, 61px);
