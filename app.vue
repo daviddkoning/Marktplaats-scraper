@@ -171,22 +171,22 @@ async function zoekProduct() {
         Dealsfinder vergemakkelijkt je zoektocht door al deze gesponsorde ruis direct weg te filteren. Binnen enkele seconden krijg je een heldere, on-demand prijsanalyse op je scherm. Zo bespaar je tijd en geld.
       </p>
     </div>
-      <p class="body-text">
-        Marktplaats telt meer dan 8 miljoen actieve advertenties en is daarmee het
-        drukste tweedehands plein van Nederland. Maar juist dat enorme volume maakt
-        het kansloos om handmatig, zelf, de scherpste deals als eerste te zien. Zeker bij
-        gewilde elektronica en e-bikes is dit het geval. 
-	Dealsfinder probeert deze transactiekosten te verminderen en het overzicht in prijzen terug te brengen.  
-      </p>
+    <p class="body-text">
+      Marktplaats telt meer dan 8 miljoen actieve advertenties en is daarmee het
+      drukste tweedehands plein van Nederland. Maar juist dat enorme volume maakt
+      het kansloos om handmatig, zelf, de scherpste deals als eerste te zien. Zeker bij
+      gewilde elektronica en e-bikes is dit het geval. 
+      Dealsfinder probeert deze transactiekosten te verminderen en het overzicht in prijzen terug te brengen.  
+    </p>
 
-      <p class="body-text">
-        Op Marktplaats komen elke minuut tientallen nieuwe advertenties online. Wie
-        de beste prijzen wil scoren - voor een iPhone, een Gazelle ebike, tweedehands bmw's 
-        of welk ander populair item dan ook - moet snel reageren. Daarnaast raken vele gebruikers door de talloze advertenties het overzicht kwijt. Vandaar dat een
-        Scanner niet langer een "nice to have" product is,  maar misschien wel de standaard voor
-        wie serieus tweedehands shopt. Daarnaast is Dealsfinder.nl ook perfect geschikt voor de verkoper die graag snel een inzicht wil hebben in 
-	de marktprijs van een product die hij/zij wil verkopen. 
-      </p>
+    <p class="body-text">
+      Op Marktplaats komen elke minuut tientallen nieuwe advertenties online. Wie
+      de beste prijzen wil scoren - voor een iPhone, een Gazelle ebike, tweedehands bmw's 
+      of welk ander populair item dan ook - moet snel reageren. Daarnaast raken vele gebruikers door de talloze advertenties het overzicht kwijt. Vandaar dat een
+      Scanner niet langer een "nice to have" product is, maar misschien wel de standaard voor
+      wie serieus tweedehands shopt. Daarnaast is Dealsfinder.nl ook perfect geschikt voor de verkoper die graag snel een inzicht wil hebben in 
+      de marktprijs van een product die hij/zij wil verkopen. 
+    </p>
 
     <div class="search-card">
       <div class="input-group">
@@ -210,37 +210,61 @@ async function zoekProduct() {
         </select>
       </div>
 
-      <div class="price-group">
-        <label for="min-price">Minimumprijs in € (optioneel):</label>
-        <input
-          id="min-price"
-          v-model="minPrijs"
-          @keyup.enter="zoekProduct"
-          type="number"
-          min="0"
-          step="1"
-          inputmode="numeric"
-          placeholder="Bijv. 50 om goedkope advertenties te negeren"
-          class="modern-input full-input"
-        />
+      <!-- Minimum Price Filter with increments -->
+      <div class="category-group" style="margin-top: 16px;">
+        <label for="min-prijs-select">Minimale prijs:</label>
+        <select
+          id="min-prijs-select"
+          v-model.number="minPrijs"
+          class="modern-select">
+          <option :value="0">Geen minimum (Alle prijzen)</option>
+          <option :value="50">€ 50,-</option>
+          <option :value="100">€ 100,-</option>
+          <option :value="250">€ 250,-</option>
+          <option :value="500">€ 500,-</option>
+          <option :value="1000">€ 1.000,-</option>
+          <option :value="2500">€ 2.500,-</option>
+          <option :value="5001">€ 5.000,- en hoger</option>
+          <option :value="10000">€ 10.000,-</option>
+          <option :value="15000">€ 15.000,-</option>
+          <option :value="20000">€ 20.000,-</option>
+          <option :value="30000">€ 30.000,-</option>
+          <option :value="40000">€ 40.000,-</option>
+          <option :value="50000">€ 50.000,-</option>
+        </select>
       </div>
 
+      <!-- Mileage Filter Switch & Sliders (Only visible for Auto's) -->
       <Transition name="fade">
         <div v-if="categorie === 'Auto\'s'" class="km-group">
-          <div class="slider-container">
-            <div class="slider-label">
-              <span>Minimale kilometerstand</span>
-              <strong>{{ formatKm(minKm) }} km</strong>
-            </div>
-            <input type="range" v-model="minKm" min="0" max="500000" step="5000" class="modern-slider" />
+          <div class="checkbox-container" style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <input 
+              type="checkbox" 
+              id="mileage-toggle" 
+              v-model="useMileageFilter" 
+              style="width: 18px; height: 18px; cursor: pointer;"
+            />
+            <label for="mileage-toggle" style="cursor: pointer; font-weight: 600; color: var(--color-charcoal); margin: 0;">
+              Filter op kilometerstand
+            </label>
           </div>
-          
-          <div class="slider-container">
-            <div class="slider-label">
-              <span>Maximale kilometerstand</span>
-              <strong>{{ formatKm(maxKm) }} km</strong>
+
+          <div v-if="useMileageFilter" style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="slider-container">
+              <div class="slider-label">
+                <span>Minimale kilometerstand</span>
+                <strong>{{ formatKm(minKm) }} km</strong>
+              </div>
+              <input type="range" v-model="minKm" min="0" max="500000" step="5000" class="modern-slider" />
             </div>
-            <input type="range" v-model="maxKm" min="0" max="500000" step="5000" class="modern-slider" />
+            
+            <div class="slider-container">
+              <div class="slider-label">
+                <span>Maximale kilometerstand</span>
+                <strong>{{ formatKm(maxKm) }} km</strong>
+              </div>
+              <input type="range" v-model="maxKm" min="0" max="500000" step="5000" class="modern-slider" />
+            </div>
           </div>
         </div>
       </Transition>
@@ -322,12 +346,12 @@ async function zoekProduct() {
           <div class="footer-item">
             <span class="icon">🎯</span> Prijsbereik (gemiddelde ± deviatie): <strong>{{ statistieken.prijs_range }}</strong>
           </div>
-	  <div v-if="zoekDuur !== null" class="footer-item">
-	    <span class="icon">⏱️</span> Zoekopdracht duurde <strong>{{ formatDuur(zoekDuur) }}</strong>
+          <div v-if="zoekDuur !== null" class="footer-item">
+            <span class="icon">⏱️</span> Zoekopdracht duurde <strong>{{ formatDuur(zoekDuur) }}</strong>
             <span v-if="statistieken.server_ms !== undefined">
               (server: {{ formatDuur(statistieken.server_ms) }})
             </span>
-	  </div>	
+          </div>	
         </div>
       </div>
     </Transition>
