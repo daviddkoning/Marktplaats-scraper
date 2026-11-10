@@ -197,10 +197,10 @@ def parse_datum_nl(raw_text):
     except ValueError:
         return None
 
-def build_url(search_term, categorie=None, page=1, min_km=None, max_km=None, min_prijs=None):
+def build_url(search_term, categorie=None, page=1, min_km=None, max_km=None, min_prijs=None, use_mileage_filter=False, postcode=None):
     encoded = urllib.parse.quote(search_term)
     
-    # 1. URL Basis: met of zonder categorie-slug
+    # 1. URL Basis: with or without category slug
     if categorie:
         slug = CATEGORIE_SLUGS.get(categorie)
         if not slug:
@@ -209,19 +209,23 @@ def build_url(search_term, categorie=None, page=1, min_km=None, max_km=None, min
     else:
         url = f"https://www.marktplaats.nl/q/{encoded}/"
         
-    # 2. Paginering
+    # 2. Pagination
     if page > 1:
         url += f"p{page}/"
         
-    # 3. Hash parameters opbouwen (prijs en km-stand)
+    # 3. Hash parameters
     hash_parts = []
     
-    # Omzetten van minimale prijs naar centen (bijv. 5000 -> PriceCentsFrom:500000 of jouw gewenste 5001)
+    if postcode:
+        hash_parts.append(f"postcode:{postcode}")
+    
+    # ONLY add PriceCentsFrom if min_prijs is strictly greater than 0
     if min_prijs is not None and min_prijs > 0:
         hash_parts.append(f"PriceCentsFrom:{int(min_prijs * 100)}")
         
-    if categorie == "Auto's":
-        if min_km is not None:
+    # ONLY add mileage filters for "Auto's" if the user has checked the mileage filter box
+    if categorie == "Auto's" and use_mileage_filter:
+        if min_km is not None and min_km > 0:
             hash_parts.append(f"mileageFrom:{min_km}")
         if max_km is not None:
             hash_parts.append(f"mileageTo:{max_km}")
@@ -230,6 +234,7 @@ def build_url(search_term, categorie=None, page=1, min_km=None, max_km=None, min
         url += "#" + "|".join(hash_parts)
             
     return url
+
 # --- ASYNC PLAYWRIGHT SCRAPING FUNCTIONS ---
 
 async def scrape_one_page(page, url, search_term, categorie=None):
