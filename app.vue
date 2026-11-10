@@ -20,12 +20,11 @@ const laadTeksten = [
 const laadTekstIndex = ref(0)
 let laadTimer = null
 
-// Title head is the page title, the text on the tab itself!
 useHead({
   title: 'Dealsfinder.nl – Waar ben je naar op zoek?'
 })
 
-// Minimumprijs (filtert goedkope advertenties weg)
+// Minimumprijs
 const minPrijs = ref('')
 
 // Kilometerstand variabelen
@@ -61,16 +60,16 @@ const toggleTheme = () => {
 }
 
 const formatPrice = (waarde) => {
-  const getal = Number(waarde);
-  if (isNaN(getal)) return waarde;
+  const getal = Number(waarde)
+  if (isNaN(getal)) return waarde
   return getal.toLocaleString('nl-NL', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
-  });
+  })
 }
 
 const formatKm = (waarde) => {
-  return Number(waarde).toLocaleString('nl-NL');
+  return Number(waarde).toLocaleString('nl-NL')
 }
 
 const formatDuur = (ms) => {
@@ -81,7 +80,7 @@ const formatDuur = (ms) => {
 function resetZoek() {
   zoekterm.value = ''
   categorie.value = ''
-  minPrijs.value = ''
+  minPrijs.value = 0
   minKm.value = 0
   maxKm.value = 300000
   statistieken.value = null
@@ -98,7 +97,6 @@ async function zoekProduct() {
     return
   }
 
-  // Start dynamic loading state & timer
   laden.value = true
   laadTekstIndex.value = 0
   laadTimer = setInterval(() => {
@@ -108,14 +106,17 @@ async function zoekProduct() {
   const start = performance.now()
   try {
     let url = `/api/stats?term=${encodeURIComponent(zoekterm.value)}`
+    
     if (categorie.value) {
       url += `&categorie=${encodeURIComponent(categorie.value)}`
-      if (categorie.value === "Auto's") {
-        url += `&min_km=${Number(minKm.value)}&max_km=${Number(maxKm.value)}`
-      }
     }
-    if (Number(minPrijs.value) > 0) {
-      url += `&min_prijs=${Number(minPrijs.value)}`
+      
+    if (minPrijs.value > 0) {
+      url += `&min_prijs=${minPrijs.value}`
+    }
+
+    if (categorie.value === "Auto's") {
+      url += `&min_km=${minKm.value}&max_km=${maxKm.value}`
     }
 
     const response = await $fetch(url)
@@ -167,22 +168,22 @@ async function zoekProduct() {
         Dealsfinder vergemakkelijkt je zoektocht door al deze gesponsorde ruis direct weg te filteren. Binnen enkele seconden krijg je een heldere, on-demand prijsanalyse op je scherm. Zo bespaar je tijd en geld.
       </p>
     </div>
-      <p class="body-text">
-        Marktplaats telt meer dan 8 miljoen actieve advertenties en is daarmee het
-        drukste tweedehands plein van Nederland. Maar juist dat enorme volume maakt
-        het kansloos om handmatig, zelf, de scherpste deals als eerste te zien. Zeker bij
-        gewilde elektronica en e-bikes is dit het geval. 
-	Dealsfinder probeert deze transactiekosten te verminderen en het overzicht in prijzen terug te brengen.  
-      </p>
+    <p class="body-text">
+      Marktplaats telt meer dan 8 miljoen actieve advertenties en is daarmee het
+      drukste tweedehands plein van Nederland. Maar juist dat enorme volume maakt
+      het kansloos om handmatig, zelf, de scherpste deals als eerste te zien. Zeker bij
+      gewilde elektronica en e-bikes is dit het geval. 
+      Dealsfinder probeert deze transactiekosten te verminderen en het overzicht in prijzen terug te brengen.  
+    </p>
 
-      <p class="body-text">
-        Op Marktplaats komen elke minuut tientallen nieuwe advertenties online. Wie
-        de beste prijzen wil scoren - voor een iPhone, een Gazelle ebike, tweedehands bmw's 
-        of welk ander populair item dan ook - moet snel reageren. Daarnaast raken vele gebruikers door de talloze advertenties het overzicht kwijt. Vandaar dat een
-        Scanner niet langer een "nice to have" product is,  maar misschien wel de standaard voor
-        wie serieus tweedehands shopt. Daarnaast is Dealsfinder.nl ook perfect geschikt voor de verkoper die graag snel een inzicht wil hebben in 
-	de marktprijs van een product die hij/zij wil verkopen. 
-      </p>
+    <p class="body-text">
+      Op Marktplaats komen elke minuut tientallen nieuwe advertenties online. Wie
+      de beste prijzen wil scoren - voor een iPhone, een Gazelle ebike, tweedehands bmw's 
+      of welk ander populair item dan ook - moet snel reageren. Daarnaast raken vele gebruikers door de talloze advertenties het overzicht kwijt. Vandaar dat een
+      Scanner niet langer een "nice to have" product is, maar misschien wel de standaard voor
+      wie serieus tweedehands shopt. Daarnaast is Dealsfinder.nl ook perfect geschikt voor de verkoper die graag snel een inzicht wil hebben in 
+      de marktprijs van een product die hij/zij wil verkopen. 
+    </p>
 
     <div class="search-card">
       <div class="input-group">
@@ -318,22 +319,20 @@ async function zoekProduct() {
           <div class="footer-item">
             <span class="icon">🎯</span> Prijsbereik (gemiddelde ± deviatie): <strong>{{ statistieken.prijs_range }}</strong>
           </div>
-	  <div v-if="zoekDuur !== null" class="footer-item">
-	    <span class="icon">⏱️</span> Zoekopdracht duurde <strong>{{ formatDuur(zoekDuur) }}</strong>
+          <div v-if="zoekDuur !== null" class="footer-item">
+            <span class="icon">⏱️</span> Zoekopdracht duurde <strong>{{ formatDuur(zoekDuur) }}</strong>
             <span v-if="statistieken.server_ms !== undefined">
               (server: {{ formatDuur(statistieken.server_ms) }})
             </span>
-	  </div>	
+          </div>	
         </div>
       </div>
     </Transition>
-
   </main>
 </template>
 
 <style>
 :root {
-  /* Wise Theme Colors */
   --color-forest-ink: #163300;
   --color-lime-voltage: #9fe870;
   --color-spruce: #054d28;
@@ -347,7 +346,6 @@ async function zoekProduct() {
   --color-fog: #e8ebe6;
   --color-paper: #ffffff;
 
-  /* Wise Border Radius & Shadows */
   --radius-lg: 10px;
   --radius-2xl: 16px;
   --radius-3xl: 28.15px;
@@ -386,7 +384,6 @@ body.dark-theme .footer-item {
   color: var(--color-paper);
 }
 
-/* Intro (dark mode) */
 body.dark-theme .intro-title,
 body.dark-theme .qm,
 body.dark-theme .answer-text,
@@ -481,7 +478,6 @@ body.dark-theme .gradient-text {
   transform: scale(1.05);
 }
 
-/* ===== INTRO ===== */
 .intro {
   margin: 0 auto 40px;
   text-align: center;
@@ -557,7 +553,6 @@ body.dark-theme .gradient-text {
   color: var(--color-charcoal);
 }
 
-/* ===== ZOEKKAART ===== */
 .search-card {
   background: var(--color-paper);
   padding: 32px 24px;
@@ -676,283 +671,3 @@ body.dark-theme .gradient-text {
 }
 
 .modern-slider {
-  -webkit-appearance: none;
-  width: 100%;
-  height: 8px;
-  background: var(--color-fog);
-  border-radius: var(--radius-full);
-  outline: none;
-  box-shadow: var(--shadow-subtle-2);
-}
-
-.modern-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--color-lime-voltage);
-  cursor: pointer;
-  box-shadow: var(--shadow-subtle);
-  transition: transform 0.1s ease;
-}
-
-.modern-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
-}
-
-/* ===== Orange Header Accent ===== */
-.orange-text {
-  color: #ff6b00;
-  -webkit-text-fill-color: #ff6b00;
-  background: none;
-}
-
-/* ===== Dynamic Spinner Styling ===== */
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 32px 20px;
-}
-
-.dynamic-spinner {
-  position: relative;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.spinner-svg {
-  animation: rotate 1.6s linear infinite;
-  width: 100%;
-  height: 100%;
-}
-
-.spinner-svg .path-bg {
-  stroke: rgba(226, 232, 240, 0.6);
-}
-
-.spinner-svg .path {
-  stroke: #ff6b00;
-  stroke-linecap: round;
-  animation: dash 1.4s ease-in-out infinite;
-}
-
-.spinner-pulse {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  background-color: #ff6b00;
-  border-radius: 50%;
-  animation: pulse 1.2s ease-in-out infinite alternate;
-}
-
-.loading-text {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-charcoal);
-  transition: opacity 0.3s ease;
-}
-
-body.dark-theme .loading-text {
-  color: var(--color-paper);
-}
-
-@keyframes rotate {
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes dash {
-  0% {
-    stroke-dasharray: 1, 150;
-    stroke-dashoffset: 0;
-  }
-  50% {
-    stroke-dasharray: 90, 150;
-    stroke-dashoffset: -35;
-  }
-  100% {
-    stroke-dasharray: 90, 150;
-    stroke-dashoffset: -124;
-  }
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(0.6);
-    opacity: 0.4;
-  }
-  100% {
-    transform: scale(1.15);
-    opacity: 1;
-  }
-}
-
-.alert-error {
-  background-color: #fce8e8;
-  color: var(--color-alarm-red);
-  padding: 16px;
-  border-radius: var(--radius-lg);
-  margin-bottom: 24px;
-  font-weight: 700;
-  box-shadow: var(--shadow-subtle);
-}
-
-.results-container {
-  background: var(--color-paper);
-  border-radius: var(--radius-3xl);
-  padding: 32px;
-  box-shadow: var(--shadow-subtle), var(--shadow-lg);
-}
-
-.results-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 32px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--color-fog);
-}
-
-.results-title {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.reset-button {
-  padding: 8px 16px;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--color-paper);
-  background: var(--color-alarm-red);
-  border: none;
-  border-radius: var(--radius-full);
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-}
-
-.reset-button:hover {
-  opacity: 0.9;
-}
-
-.results-header h2 {
-  margin: 0;
-  font-size: 25px;
-  color: var(--color-obsidian);
-  font-weight: 700;
-}
-
-.badge {
-  background: var(--color-linen-mist);
-  color: var(--color-forest-ink);
-  padding: 6px 14px;
-  border-radius: var(--radius-full);
-  font-size: 14px;
-  font-weight: 700;
-  box-shadow: var(--shadow-subtle);
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 20px;
-  margin-bottom: 24px;
-}
-
-.stat-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  height: 100%;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: var(--color-slate);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.stat-box {
-  background-color: var(--color-paper);
-  padding: 20px 16px;
-  border-radius: var(--radius-2xl);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  box-shadow: var(--shadow-subtle);
-  flex-grow: 1;
-  min-height: 70px;
-}
-
-.stat-value {
-  font-size: 25px;
-  color: var(--color-obsidian);
-  font-weight: 700;
-  line-height: 1.1;
-}
-
-.primary-box {
-  background: var(--color-linen-mist);
-}
-
-.primary-text {
-  color: var(--color-forest-ink);
-}
-
-.footer-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: var(--color-charcoal);
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.4s ease, transform 0.4s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: translateY(-5px);
-}
-
-.Logo {
-  display: block;
-  max-height: 170px;
-  max-width: 100%;
-  margin: 0 auto 12px;
-  object-fit: contain;
-}
-
-.gradient-text {
-  margin: 0;
-  font-size: clamp(36px, 8vw, 61px);
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.915px;
-  color: var(--color-forest-ink);
-}
-
-.sub-heading {
-  transition: color 0.3s ease; 
-  font-size: 36px;
-  font-weight: 700;
-  color: var(--color-obsidian);
-  line-height: 1.1;
-  margin-bottom: 8px;
-}
-</style>
