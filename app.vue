@@ -26,9 +26,10 @@ useHead({
 })
 
 // Minimumprijs (filtert goedkope advertenties weg)
-const minPrijs = ref('')
+const minPrijs = ref(0)
 
-// Kilometerstand variabelen
+// Kilometerstand variabelen (en mileage filter)
+const useMileageFilter = ref(false)
 const minKm = ref(0)
 const maxKm = ref(300000)
 
@@ -108,33 +109,36 @@ async function zoekProduct() {
   const start = performance.now()
   try {
     let url = `/api/stats?term=${encodeURIComponent(zoekterm.value)}`
-    if (categorie.value) {
+    
+	  if (categorie.value) {
       url += `&categorie=${encodeURIComponent(categorie.value)}`
-      if (categorie.value === "Auto's") {
-        url += `&min_km=${Number(minKm.value)}&max_km=${Number(maxKm.value)}`
       }
-    }
-    if (Number(minPrijs.value) > 0) {
-      url += `&min_prijs=${Number(minPrijs.value)}`
-    }
+      
+      if (minPrijs.value > 0) {
+      url += `&min_prijs=$minPrijs.value}`
+      }
+	  // Only append mileage params if category is Auto's AND the switch is checked
+      if (categorie.value === "Auto's" && useMileageFilter.value) {
+      url += `&use_mileage_filter=true&min_km=${minKm.value}&max_km=${maxKm.value}`
+      }
 
-    const response = await $fetch(url)
+      const response = await $fetch(url)
 
-    if (response.error) {
-      foutmelding.value = response.error
-    } else {
-      statistieken.value = response
+      if (response.error) {
+        foutmelding.value = response.error
+      } else {
+        statistieken.value = response
       await nextTick()
       await new Promise(requestAnimationFrame)
       zoekDuur.value = performance.now() - start
+      }
+    } catch (error) {
+      foutmelding.value = "Kan de backend server niet bereiken. Draait FastAPI?"
+    } finally {
+      if (laadTimer) clearInterval(laadTimer)
+      laden.value = false
     }
-  } catch (error) {
-    foutmelding.value = "Kan de backend server niet bereiken. Draait FastAPI?"
-  } finally {
-    if (laadTimer) clearInterval(laadTimer)
-    laden.value = false
   }
-}
 </script>
 
 <template>
