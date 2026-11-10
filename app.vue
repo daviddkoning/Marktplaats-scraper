@@ -378,10 +378,12 @@ body.dark-theme .stat-value {
   color: var(--color-paper);
 }
 
-body.dark-theme .stat-label,
-body.dark-theme .price-group label,
-body.dark-theme .category-group label {
+body.dark-theme .stat-label {
   color: var(--color-linen-mist);
+}
+
+body.dark-theme .footer-item {
+  color: var(--color-paper);
 }
 
 /* Intro (dark mode) */
@@ -416,22 +418,10 @@ body.dark-theme .answer-dot {
   background: var(--color-lime-voltage);
 }
 
-body.dark-theme .search-card,
 body.dark-theme .results-container,
 body.dark-theme .stat-box {
   background-color: var(--color-spruce);
   box-shadow: var(--shadow-subtle);
-}
-
-body.dark-theme .modern-input,
-body.dark-theme .modern-select {
-  background-color: var(--color-forest-ink) !important;
-  color: var(--color-paper);
-  box-shadow: var(--shadow-subtle-2) !important;
-}
-
-body.dark-theme .modern-input::placeholder {
-  color: var(--color-pebble);
 }
 
 body.dark-theme .primary-box {
